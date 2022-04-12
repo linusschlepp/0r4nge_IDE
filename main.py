@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 from tkinter import *
@@ -27,16 +28,7 @@ def new_file():
     file.close()
 
 
-def create_file(file_content):
-    file = open(open('currentFile.txt').read(), 'w')
-    file_name = str(Path(file.name))
-    absolute_path = str(Path(file.name).parent.absolute())
-    file.write(file_content)
-    file.close()
-    command = "cd " + absolute_path + "&&" + "python " + file_name
-    subprocess.run(["start", "/wait", "cmd", "/K", command], shell=True)
 
-    file.close()
 
 
 class Window:
@@ -45,7 +37,7 @@ class Window:
         self.tree_view = Treeview(win)
         self.tree_view['columns'] = ("Name")
         self.tree_view.column("#0", width=180, minwidth=25)
-        self.tree_view.column("Name", anchor=W, width=170)
+       # self.tree_view.column("Name", anchor=W, width=170)
         self.t3 = Text(win, height=50, width=130)
         self.t3.place(x=840, y=5)
 
@@ -56,7 +48,7 @@ class Window:
         self.file_menu = Menu(self.menu_bar)
         # self.menu_bar.config(menu=self.file_menu)
 
-        self.file_menu.add_command(label="Execute", command=lambda: create_file(self.t3.get("1.0", END)))
+        self.file_menu.add_command(label="Execute", command=lambda: self.create_file(self.t3.get("1.0", END)))
         self.file_menu.add_command(label="Select", command=lambda: self.select_file())
         self.file_menu.add_command(label="Add", command=lambda: new_file())
 
@@ -102,8 +94,22 @@ class Window:
         window.mainloop()
 
     def OnDoubleClick(self, event):
-        item = self.tree_view.identify('item', event.x, event.y)
-        print("you clicked on", self.tree_view.item(item, "text"))
+        response = self.tree_view.item(self.tree_view.focus())
+        self.current_file = self.text.get() + "\\" + str(response["values"]).strip("['").strip("']'")
+        self.t3.delete(1.0, END)
+        self.t3.insert(1.0, open(str(Path(self.current_file))).read())
+
+    def create_file(self,file_content):
+        # file = open(open('currentFile.txt').read(), 'w')
+        file = open(self.current_file, 'w')
+        file_name = str(Path(file.name))
+        absolute_path = str(Path(file.name).parent.absolute())
+        file.write(file_content)
+        file.close()
+        command = "cd " + absolute_path + "&&" + "python " + file_name
+        subprocess.run(["start", "/wait", "cmd", "/K", command], shell=True)
+
+        file.close()
 
     def select_file(self):
         self.file = open('currentFile.txt', 'r')
