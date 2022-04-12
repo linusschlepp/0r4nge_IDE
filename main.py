@@ -7,6 +7,7 @@ from tkinter.ttk import *
 from pathlib import Path
 
 
+
 # def select_file():
 #     file = open('currentFile.txt', 'w')
 #     file_name = askopenfilename()
@@ -18,42 +19,29 @@ from pathlib import Path
 #     my_win.t3.insert(1.0, "")
 
 
-def new_file():
-    file = open('currentFile.txt', 'w')
-    file_name = asksaveasfile(mode='r', defaultextension=".py")
-    try:
-        file.write(str(Path(file_name.name)))
-    except AttributeError:
-        pass
-    file.close()
-
-
-
-
-
 class Window:
     def __init__(self, win):
         self.win = win
         self.tree_view = Treeview(win)
         self.tree_view['columns'] = ("Name")
         self.tree_view.column("#0", width=180, minwidth=25)
-       # self.tree_view.column("Name", anchor=W, width=170)
+        # self.tree_view.column("Name", anchor=W, width=170)
         self.t3 = Text(win, height=50, width=130)
-        self.t3.place(x=840, y=5)
+        self.t3.place(x=500, y=5)
 
         #  self.menu_bar = Menubutton(window, image=PhotoImage(file='addIcon.png'))
-        self.menu_bar = Menu(window)
+        # self.menu_bar = Menu(window)
         #  self.menu_bar.grid(row=0, column=0)
 
-        self.file_menu = Menu(self.menu_bar)
+        # self.file_menu = Menu(self.menu_bar)
         # self.menu_bar.config(menu=self.file_menu)
 
-        self.file_menu.add_command(label="Execute", command=lambda: self.create_file(self.t3.get("1.0", END)))
-        self.file_menu.add_command(label="Select", command=lambda: self.select_file())
-        self.file_menu.add_command(label="Add", command=lambda: new_file())
+        # self.file_menu.add_command(label="Execute", command=lambda: self.create_file(self.t3.get("1.0", END)))
+        # self.file_menu.add_command(label="Select", command=lambda: self.select_file())
+        # self.file_menu.add_command(label="Add", command=lambda: new_file())
 
-        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
-        window.config(menu=self.menu_bar)
+        # self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        #  window.config(menu=self.menu_bar)
 
         if open('currentFile.txt').read() is not None:
             try:
@@ -61,6 +49,13 @@ class Window:
                 self.text = StringVar()
                 dir = str(open('currentFile.txt').read())
                 self.text.set(dir)
+                self.current_file = dir + "\\" + str(os.listdir(dir)[0])
+
+                self.lbl_file = str(os.listdir(dir)[0])
+                self.lbl_file = Label(win, text="Selected file: " + os.listdir(dir)[0],
+                                      font=('Helvetica', 8, 'bold'))
+                self.lbl_file.place(x=5, y=70)
+                self.t3.insert(1.0, open(str(Path(self.current_file))).read())
                 for file in os.listdir(dir):
                     f = os.path.join(dir, file)
                     if os.path.isfile(f):
@@ -68,39 +63,42 @@ class Window:
 
                 self.lbl_path = Label(win, text=self.text.get(),
                                       font=('Helvetica', 10, 'bold italic'))
-                self.lbl_path.place(x=5, y=5)
+                self.lbl_path.place(x=5, y=50)
             except FileNotFoundError:
                 pass
 
-        # self.btn_execute = Button(win, text='Execute',
-        #                           command=lambda: create_file(self.t3.get("1.0", END)))
-        # self.btn_select = Button(win, text='Select',
-        #                          command=lambda: self.select_file())
-        # self.btn_new = Button(win, text='Add',
-        #                          command=lambda: new_file())
+        self.btn_execute = Button(win, text='Execute',
+                                  command=lambda: self.create_file(self.t3.get("1.0", END)))
+        self.btn_select = Button(win, text='Select',
+                                 command=lambda: self.select_file())
+        self.btn_new = Button(win, text='Add',
+                              command=lambda: self.new_file())
 
-        #  self.tree_view.heading("#0", text="Label", anchor=W)
-        #  self.tree_view.heading("Name", text="Name", anchor=W)
-        #  self.tree_view.insert(parent='', index='end', iid=0, text="Parent", values=("Test"))
-        #
+        # self.tree_view.heading("#0", text="Label", anchor=W)
+        # self.tree_view.heading("Name", text="Name", anchor=W)
+        # self.tree_view.insert(parent='', index='end', iid=0, text="Parent", values=("Test"))
+
         self.tree_view.pack(side=TOP, fill=X)
         self.tree_view.bind("<Double-1>", self.OnDoubleClick)
-        self.tree_view.place(x=5, y=50)
-        # self.btn_execute.place(x=5, y=240)
-        # self.btn_select.place(x=90, y=240)
-        # self.btn_new.place(x=175, y=240)
+        self.tree_view.place(x=5, y=150)
+        self.btn_execute.place(x=5, y=5)
+        self.btn_select.place(x=90, y=5)
+        self.btn_new.place(x=175, y=5)
         window.title('0r4nge IDE')
         window.geometry('1700x800+10+10')
         window.mainloop()
 
     def OnDoubleClick(self, event):
-        response = self.tree_view.item(self.tree_view.focus())
-        self.current_file = self.text.get() + "\\" + str(response["values"]).strip("['").strip("']'")
+        current_item = self.tree_view.item(self.tree_view.focus())
+        self.current_file = self.text.get() + "\\" + str(current_item["values"]).strip("['").strip("']'")
+        self.lbl_file.destroy()
+        self.lbl_file = Label(self.win, text="Selected file: " + str(current_item["values"]).strip("['").strip("']'"),
+                              font=('Helvetica', 8, 'bold'))
+        self.lbl_file.place(x=5, y=70)
         self.t3.delete(1.0, END)
         self.t3.insert(1.0, open(str(Path(self.current_file))).read())
 
-    def create_file(self,file_content):
-        # file = open(open('currentFile.txt').read(), 'w')
+    def create_file(self, file_content):
         file = open(self.current_file, 'w')
         file_name = str(Path(file.name))
         absolute_path = str(Path(file.name).parent.absolute())
@@ -130,6 +128,37 @@ class Window:
         # self.btn_select.place(x=90, y=240)
         self.text.set(str(Path(self.file_name)))
         self.t3.insert(1.0, open(str(Path(self.file_name))).read())
+
+    def popupwin(self):
+        # Create a Toplevel window
+        self.top = Toplevel(self.win)
+        self.top.geometry("750x250")
+        self.top.title("Enter name")
+
+        # Create an Entry Widget in the Toplevel window
+        self.entry = Entry(self.top, width=25)
+        self.entry.pack()
+
+        # Create a Button to print something in the Entry widget
+        #  Button(top, text="Ok", command=lambda: insert_val(entry)).pack(pady=5, side=TOP)
+        # Create a Button Widget in the Toplevel Window
+        self.button = Button(self.top, text="Ok", command=lambda: self.top.destroy())
+        self.button.pack(pady=5, side=TOP)
+
+        # Create a Label
+    #    self.label = Label(self.win, text="Click the Button to Open the Popup Dialogue", font=('Helvetica 15 bold'))
+    #    self.label.pack(pady=20)
+
+        self.new_file = self.entry.get()
+
+    def new_file(self):
+        file_name = input("enter file name: ")
+        self.tree_view.insert('', END, values=file_name+".py")
+        file_name = self.text.get() + "\\" + file_name+".py"
+        try:
+            open(file_name, 'w')
+        except AttributeError:
+            pass
 
 
 window = Tk()
