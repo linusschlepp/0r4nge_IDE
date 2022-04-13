@@ -24,7 +24,9 @@ class Window:
         self.win = win
         self.tree_view = Treeview(win)
         self.tree_view['columns'] = ("Name")
-        self.tree_view.column("#0", width=180, minwidth=25)
+      #  self.tree_view.column("#0", width=120, minwidth=25, stretch=NO)
+       #  self.tree_view.heading("#0", text="Name", anchor=W)
+       # self.tree_view.column("Name", width=150, minwidth=150, stretch=NO)
         # self.tree_view.column("Name", anchor=W, width=170)
         self.t3 = Text(win, height=50, width=130)
         self.t3.place(x=500, y=5)
@@ -56,12 +58,13 @@ class Window:
                                       font=('Helvetica', 8, 'bold'))
                 self.lbl_file.place(x=5, y=70)
                 self.t3.insert(1.0, open(str(Path(self.current_file))).read())
+                self.tree_view.insert(parent='', iid=0, text=str(Path(dir).name), index='end')
                 for file in os.listdir(dir):
                     f = os.path.join(dir, file)
                     if os.path.isfile(f):
-                        self.tree_view.insert('', END, values=file)
+                        self.tree_view.insert(parent='0', index='end', text=str(file))
 
-                self.lbl_path = Label(win, text=self.text.get(),
+                self.lbl_path = Label(win, text=str(Path(self.text.get()).name) + " - " + self.text.get(),
                                       font=('Helvetica', 10, 'bold italic'))
                 self.lbl_path.place(x=5, y=50)
             except FileNotFoundError:
@@ -80,7 +83,7 @@ class Window:
 
         self.tree_view.pack(side=TOP, fill=X)
         self.tree_view.bind("<Double-1>", self.OnDoubleClick)
-        self.tree_view.place(x=5, y=150)
+        self.tree_view.place(x=5, y=100)
         self.btn_execute.place(x=5, y=5)
         self.btn_select.place(x=90, y=5)
         self.btn_new.place(x=175, y=5)
@@ -90,9 +93,9 @@ class Window:
 
     def OnDoubleClick(self, event):
         current_item = self.tree_view.item(self.tree_view.focus())
-        self.current_file = self.text.get() + "\\" + str(current_item["values"]).strip("['").strip("']'")
+        self.current_file = self.text.get() + "\\" + str(current_item["text"]).strip("['").strip("']'")
         self.lbl_file.destroy()
-        self.lbl_file = Label(self.win, text="Selected file: " + str(current_item["values"]).strip("['").strip("']'"),
+        self.lbl_file = Label(self.win, text="Selected file: " + str(current_item["text"]).strip("['").strip("']'"),
                               font=('Helvetica', 8, 'bold'))
         self.lbl_file.place(x=5, y=70)
         self.t3.delete(1.0, END)
