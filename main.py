@@ -76,7 +76,7 @@ class Window:
         parent_item = self.tree_view.parent(self.tree_view.selection()[0])
         s = self.tree_view.item(parent_item)['text']
         while s != Path(self.text.get()).name:
-            temp_path = s + "//" + temp_path
+            temp_path = s + "\\" + temp_path
             parent_item = self.tree_view.parent(parent_item)
             s = self.tree_view.item(parent_item)['text']
 
