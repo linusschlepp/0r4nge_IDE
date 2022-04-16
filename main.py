@@ -14,6 +14,7 @@ class Window:
         self.tree_view['columns'] = ("Name")
         self.t3 = Text(win, height=50, width=130)
         self.t3.place(x=500, y=5)
+        self.counter = 0
 
         if open('currentFile.txt').read() is not None:
             try:
@@ -28,17 +29,16 @@ class Window:
                                       font=('Helvetica', 8, 'bold'))
                 self.lbl_file.place(x=5, y=70)
                 self.t3.insert(1.0, open(str(Path(self.current_file))).read())
-                self.tree_view.insert(parent='', iid=0, text=str(Path(dir).name), index='end')
-                for file in os.listdir(dir):
-                    f = os.path.join(dir, file)
-                    if os.path.isfile(f):
-                        self.tree_view.insert(parent='0', index='end', text=str(file))
+                root_node = self.tree_view.insert('', text=str(Path(dir).name), index='end')
+
+                self.file_structure(root_node, dir)
+               
 
                 self.lbl_path = Label(win, text=str(Path(self.text.get()).name) + " - " + self.text.get(),
                                       font=('Helvetica', 10, 'bold italic'))
                 self.lbl_path.place(x=5, y=50)
-            except FileNotFoundError:
-                pass
+            except FileNotFoundError as e:
+                print(e)
 
         self.btn_execute = Button(win, text='Execute',
                                   command=lambda: self.create_file(self.t3.get("1.0", END)))
@@ -63,9 +63,24 @@ class Window:
         file.write(self.t3.get("1.0", END))
         file.close()
 
+    def file_structure(self, parent, dir):
+        for file in os.listdir(dir):
+            f = os.path.join(dir, file)
+            new_root = self.tree_view.insert(parent, index='end', text=file, tags=Path(f))
+            if os.path.isdir(f):
+                self.file_structure(new_root, f)
+
     def on_double_click(self, event):
+        temp_path = ""
         current_item = self.tree_view.item(self.tree_view.focus())
-        self.current_file = self.text.get() + "\\" + str(current_item["text"]).strip("['").strip("']'")
+        parent_item = self.tree_view.parent(self.tree_view.selection()[0])
+        s = self.tree_view.item(parent_item)['text']
+        while s != Path(self.text.get()).name:
+            temp_path = s + "//" + temp_path
+            parent_item = self.tree_view.parent(parent_item)
+            s = self.tree_view.item(parent_item)['text']
+
+        self.current_file = self.text.get() + "\\" + temp_path + "\\" + str(current_item["text"]).strip("['").strip("']'")
         self.lbl_file.destroy()
         self.lbl_file = Label(self.win, text="Selected file: " + str(current_item["text"]).strip("['").strip("']'"),
                               font=('Helvetica', 8, 'bold'))
