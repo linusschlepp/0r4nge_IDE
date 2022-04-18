@@ -8,9 +8,9 @@ from popup import PopUp
 from pathlib import Path
 
 
-# TODO: Fix add-mechanism
-# - The user should be able to add files to dir, via right-click
-# - add further menu points
+# TODO: Fix add-images/icons to project especially TreeView
+# - enable right click on root_node, one add method would be great
+# - enable the addition of a complete new project (clear existing stuff)
 class Window:
     def __init__(self, win):
         self.win = win
@@ -19,9 +19,6 @@ class Window:
         self.t3 = Text(win, height=50, width=130)
         self.t3.place(x=500, y=5)
         self.counter = 0
-        self.right_click_meu = Menu(self.win, tearoff=0)
-        self.right_click_meu.add_command(label="Rename", command=self.rename_file)
-        self.right_click_meu.add_command(label="Delete", command=self.delete_file)
 
         if open('currentFile.txt').read() is not None:
             try:
@@ -38,9 +35,9 @@ class Window:
                 self.lbl_file.place(x=5, y=70)
                 if os.path.isfile(Path(self.current_file)):
                     self.t3.insert(1.0, open(str(Path(self.current_file))).read())
-                root_node = self.tree_view.insert('', text=str(Path(dir).name), index='end')
+                self.root_node = self.tree_view.insert('', text=str(Path(dir).name), index='end')
 
-                self.file_structure(root_node, dir)
+                self.file_structure(self.root_node, dir)
 
                 self.lbl_path = Label(win, text=str(Path(self.text.get()).name) + " - " + self.text.get(),
                                       font=('Helvetica', 10, 'bold italic'))
@@ -52,8 +49,10 @@ class Window:
                                   command=lambda: self.create_file(self.t3.get("1.0", END)))
         self.btn_select = Button(win, text='Select',
                                  command=lambda: self.select_file())
-        self.btn_new = Button(win, text='Add',
-                              command=lambda: self.add_file())
+        self.btn_add_file = Button(win, text='Add file',
+                                   command=lambda: self.add_file(False))
+        self.btn_add_dir = Button(win, text='Add directory',
+                                  command=lambda: self.add_file(True))
 
         self.tree_view.pack(side=TOP, fill=X)
         self.t3.bind("<Key>", lambda event: self.change_file())
@@ -62,7 +61,8 @@ class Window:
         self.tree_view.place(x=5, y=100)
         self.btn_execute.place(x=5, y=5)
         self.btn_select.place(x=90, y=5)
-        self.btn_new.place(x=175, y=5)
+        self.btn_add_file.place(x=175, y=5)
+        self.btn_add_dir.place(x=260, y=5)
         window.title('0r4nge IDE')
         window.geometry('1700x800+10+10')
         window.mainloop()
@@ -76,7 +76,7 @@ class Window:
         os.rename(self.current_file, str(Path(self.current_file).parent) + "\\" + new_name)
         self.tree_view.item(self.tree_view.selection()[0], text=new_name)
 
-    # os.rename(self.current_file, )
+
 
     def delete_file(self):
 
@@ -92,11 +92,33 @@ class Window:
         print(self.current_file)
 
     def do_popup(self, event):
-        self.current_file = self.get_node_path(self.tree_view.item(self.tree_view.focus()))
+        self.right_click_menu = Menu(self.win, tearoff=0)
+        self.right_click_menu.add_command(label="Rename", command=self.rename_file)
+        self.right_click_menu.add_command(label="Delete", command=self.delete_file)
+        if os.path.isdir(Path(self.current_file)):
+            self.right_click_menu.add_command(label="Add file", command= lambda: self.add_file_to(False))
+            self.right_click_menu.add_command(label="Add directory", command= lambda: self.add_file_to(True))
         try:
-            self.right_click_meu.tk_popup(event.x_root, event.y_root)
+            self.right_click_menu.tk_popup(event.x_root, event.y_root)
         finally:
-            self.right_click_meu.grab_release()
+            self.right_click_menu.grab_release()
+
+    def add_file_to(self, is_dir):
+        file_name = PopUp(self.win)
+        self.win.wait_window(file_name.top)
+        file_name = str(file_name.value)
+        if not is_dir:
+            file_name = file_name + ".py"
+        self.tree_view.insert(parent=self.tree_view.selection()[0], index='end', text=file_name)
+
+        try:
+            file_name = self.current_file + "\\" + file_name
+            if is_dir:
+                os.mkdir(file_name)
+            else:
+                open(file_name, 'w')
+        except AttributeError as e:
+            print(e)
 
     def change_file(self):
         self.current_file = self.get_node_path(self.tree_view.item(self.tree_view.focus()))
@@ -119,11 +141,12 @@ class Window:
 
         self.current_file = self.get_node_path(current_item)
 
+        self.lbl_file.destroy()
+        self.lbl_file = Label(self.win, text="Selected file: " + str(Path(self.get_node_path(current_item)).name),
+                              font=('Helvetica', 8, 'bold'))
+        self.lbl_file.place(x=5, y=70)
+
         if os.path.isfile(Path(self.current_file)):
-            self.lbl_file.destroy()
-            self.lbl_file = Label(self.win, text="Selected file: " + str(Path(self.get_node_path(current_item)).name),
-                                  font=('Helvetica', 8, 'bold'))
-            self.lbl_file.place(x=5, y=70)
             self.t3.delete(1.0, END)
             self.t3.insert(1.0, open(str(Path(self.get_node_path(current_item)))).read())
 
@@ -166,14 +189,20 @@ class Window:
         self.text.set(str(Path(self.file_name)))
         self.t3.insert(1.0, open(str(Path(self.file_name))).read())
 
-    def add_file(self):
+    def add_file(self, is_dir):
         file_name = PopUp(self.win)
         self.win.wait_window(file_name.top)
-        self.tree_view.insert(parent='0', index='end', text=str(file_name.value) + ".py")
-        # TODO: This requires fixing this is not up to date (path of the file has to be correct)
-        file_name = self.text.get() + "\\" + str(file_name.value) + ".py"
+        file_name = str(file_name.value)
+        if not is_dir:
+            file_name = file_name + ".py"
+        self.tree_view.insert(self.root_node, index='end', text=file_name)
+
         try:
-            open(file_name, 'w')
+            file_name = self.text.get() + "\\" + file_name
+            if is_dir:
+                os.mkdir(file_name)
+            else:
+                open(file_name, 'w')
         except AttributeError as e:
             print(e)
 
