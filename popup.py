@@ -9,7 +9,7 @@ class PopUp(Frame):
         self.top.geometry("750x250")
         self.top.title("Enter name")
 
-        self.label = Label(self.top, text="Enter name of new file")
+        self.label = Label(self.top, text="Enter name of the file, you want to add/rename")
         self.label.pack()
         self.entry = Entry(self.top)
         self.entry.pack()
