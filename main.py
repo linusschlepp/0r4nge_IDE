@@ -20,30 +20,32 @@ class Window:
         self.t3.place(x=500, y=5)
         self.counter = 0
 
-        if open('currentFile.txt').read() is not None:
-            try:
+        # self.set_root_node(dir)
 
-                self.text = StringVar()
-                dir = str(open('currentFile.txt').read())
-                self.text.set(dir)
-
-                self.current_file = dir + "\\" + str(os.listdir(dir)[0])
-
-                self.lbl_file = str(os.listdir(dir)[0])
-                self.lbl_file = Label(win, text="Selected file: " + os.listdir(dir)[0],
-                                      font=('Helvetica', 8, 'bold'))
-                self.lbl_file.place(x=5, y=70)
-                if os.path.isfile(Path(self.current_file)):
-                    self.t3.insert(1.0, open(str(Path(self.current_file))).read())
-                self.root_node = self.tree_view.insert('', text=str(Path(dir).name), index='end')
-
-                self.file_structure(self.root_node, dir)
-
-                self.lbl_path = Label(win, text=str(Path(self.text.get()).name) + " - " + self.text.get(),
-                                      font=('Helvetica', 10, 'bold italic'))
-                self.lbl_path.place(x=5, y=50)
-            except FileNotFoundError as e:
-                print(e)
+        # if open('currentFile.txt').read() is not None:
+        #     try:
+        #
+        #         self.text = StringVar()
+        #         dir = str(open('currentFile.txt').read())
+        #         self.text.set(dir)
+        #
+        #         self.current_file = dir + "\\" + str(os.listdir(dir)[0])
+        #
+        #         self.lbl_file = str(os.listdir(dir)[0])
+        #         self.lbl_file = Label(win, text="Selected file: " + os.listdir(dir)[0],
+        #                               font=('Helvetica', 8, 'bold'))
+        #         self.lbl_file.place(x=5, y=70)
+        #         if os.path.isfile(Path(self.current_file)):
+        #             self.t3.insert(1.0, open(str(Path(self.current_file))).read())
+        #         self.root_node = self.tree_view.insert('', text=str(Path(dir).name), index='end')
+        #
+        #         self.file_structure(self.root_node, dir)
+        #
+        #         self.lbl_path = Label(win, text=str(Path(self.text.get()).name) + " - " + self.text.get(),
+        #                               font=('Helvetica', 10, 'bold italic'))
+        #         self.lbl_path.place(x=5, y=50)
+        #     except FileNotFoundError as e:
+        #         print(e)
 
         self.btn_execute = Button(win, text='Execute',
                                   command=lambda: self.create_file(self.t3.get("1.0", END)))
@@ -65,7 +67,45 @@ class Window:
         self.btn_add_dir.place(x=260, y=5)
         window.title('0r4nge IDE')
         window.geometry('1700x800+10+10')
+
+        self.text = StringVar()
+        dir = str(open('currentFile.txt').read())
+
+        self.lbl_path = None
+        self.lbl_file = None
+
+        self.current_file = dir + "\\" + str(os.listdir(dir)[0])
+
+       # self.lbl_file = str(os.listdir(dir)[0])
+
+        self.set_root_node(dir)
+
         window.mainloop()
+
+    def set_root_node(self, dir):
+
+        if open('currentFile.txt').read() is not None:
+            try:
+                self.text.set(dir)
+
+
+                if os.path.isfile(Path(self.current_file)):
+                    self.t3.insert(1.0, open(str(Path(self.current_file))).read())
+                self.root_node = self.tree_view.insert('', text=str(Path(dir).name), index='end')
+
+                self.file_structure(self.root_node, dir)
+
+                if self.lbl_path is not None and self.lbl_file is not None:
+                    self.lbl_path.destroy()
+                    self.lbl_file.destroy()
+                self.lbl_path = Label(self.win, text=str(Path(self.text.get()).name) + " - " + self.text.get(),
+                                      font=('Helvetica', 10, 'bold italic'))
+                self.lbl_file = Label(self.win, text="Selected file: " + os.listdir(dir)[0],
+                                      font=('Helvetica', 8, 'bold'))
+                self.lbl_file.place(x=5, y=70)
+                self.lbl_path.place(x=5, y=50)
+            except FileNotFoundError as e:
+                print(e)
 
     def rename_file(self):
         new_name = PopUp(self.win)
@@ -75,8 +115,6 @@ class Window:
             new_name = new_name + ".py"
         os.rename(self.current_file, str(Path(self.current_file).parent) + "\\" + new_name)
         self.tree_view.item(self.tree_view.selection()[0], text=new_name)
-
-
 
     def delete_file(self):
 
@@ -96,8 +134,8 @@ class Window:
         self.right_click_menu.add_command(label="Rename", command=self.rename_file)
         self.right_click_menu.add_command(label="Delete", command=self.delete_file)
         if os.path.isdir(Path(self.current_file)):
-            self.right_click_menu.add_command(label="Add file", command= lambda: self.add_file_to(False))
-            self.right_click_menu.add_command(label="Add directory", command= lambda: self.add_file_to(True))
+            self.right_click_menu.add_command(label="Add file", command=lambda: self.add_file_to(False))
+            self.right_click_menu.add_command(label="Add directory", command=lambda: self.add_file_to(True))
         try:
             self.right_click_menu.tk_popup(event.x_root, event.y_root)
         finally:
@@ -107,6 +145,10 @@ class Window:
         file_name = PopUp(self.win)
         self.win.wait_window(file_name.top)
         file_name = str(file_name.value)
+
+        if len(file_name) == 0:
+            return
+
         if not is_dir:
             file_name = file_name + ".py"
         self.tree_view.insert(parent=self.tree_view.selection()[0], index='end', text=file_name)
@@ -187,12 +229,18 @@ class Window:
         self.t3.delete(1.0, END)
         self.file.close()
         self.text.set(str(Path(self.file_name)))
-        self.t3.insert(1.0, open(str(Path(self.file_name))).read())
+        #    self.t3.insert(1.0, open(str(Path(self.file_name))).read())
+        self.tree_view.delete(*self.tree_view.get_children())
+        self.set_root_node(str(Path(self.file_name)))
 
     def add_file(self, is_dir):
         file_name = PopUp(self.win)
         self.win.wait_window(file_name.top)
         file_name = str(file_name.value)
+
+        if len(file_name) == 0:
+            return
+
         if not is_dir:
             file_name = file_name + ".py"
         self.tree_view.insert(self.root_node, index='end', text=file_name)
