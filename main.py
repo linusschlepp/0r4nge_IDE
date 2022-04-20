@@ -4,11 +4,16 @@ import subprocess
 from tkinter import *
 from tkinter.filedialog import *
 from tkinter.ttk import *
+
+import PIL.ImageFile
+
 from popup import PopUp
 from pathlib import Path
+from PIL import Image, ImageTk as itk
 
 
 # TODO: Fix add-images/icons to project especially TreeView
+# - add menubar
 class Window:
     def __init__(self, win):
         self.win = win
@@ -17,7 +22,6 @@ class Window:
         self.t3 = Text(win, height=50, width=130)
         self.t3.place(x=500, y=5)
         self.counter = 0
-
 
         self.btn_execute = Button(win, text='Execute',
                                   command=lambda: self.create_file(self.t3.get("1.0", END)))
@@ -143,10 +147,16 @@ class Window:
         file.close()
 
     def file_structure(self, parent, dir):
+        width = 16
+        height = 16
+        img = Image.open('gif.gif')
+        img = img.resize((width, height))
+        render = itk.PhotoImage(PIL.Image.open('gif.gif'))
+
         for file in os.listdir(dir):
             f = os.path.join(dir, file)
             new_root = self.tree_view.insert(parent, index='end', text=file, tags=Path(f),
-                                             image=PhotoImage(file="gif.gif"))
+                                             image=render)
             if os.path.isdir(f):
                 self.file_structure(new_root, f)
 
