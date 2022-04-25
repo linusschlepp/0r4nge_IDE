@@ -10,17 +10,17 @@ import PIL.ImageFile
 from popup import PopUp
 from pathlib import Path
 from PIL import Image, ImageTk as itk
+import popup_ as pu
+
 
 
 # TODO: Fix add-images/icons to project especially TreeView
-# - add menubar
-# - Empty directories need to be added, deal with files (current_files and labels)
 class Window:
     def __init__(self, win):
         self.win = win
         self.win.iconbitmap("images/Orange_IDE.ico")
         self.tree_view = Treeview(win)
-        self.tree_view['columns'] = ("Name")
+        self.tree_view['columns'] = "Name"
         self.text_area = Text(win, height=50, width=130)
         self.text_area.place(x=500, y=5)
         self.counter = 0
@@ -90,6 +90,7 @@ class Window:
         self.lbl_path = None
         self.lbl_file = None
         self.current_file = None
+        self.dir_list = []
         self.name_file = str(os.listdir(dir)[0]) if len(os.listdir(dir)) > 0 else ""
 
         try:
@@ -124,7 +125,6 @@ class Window:
                                       font=('Helvetica', 8, 'bold'))
                 self.lbl_file.place(x=5, y=35)
 
-
             except FileNotFoundError or IndexError as e:
                 if type(e) == "IndexError":
                     pass
@@ -132,11 +132,23 @@ class Window:
                     print(e)
 
     def rename_file(self):
+
         new_name = PopUp(self.win)
         self.win.wait_window(new_name.top)
         new_name = str(new_name.value)
+
         if len(new_name) == 0:
             return
+
+        if self.tree_view.selection()[0] == self.root_node:
+            self.file = open('currentFile.txt', 'w')
+            self.file.write(str(Path(self.current_file).parent) + "\\" + new_name)
+            self.text.set(str(Path(self.current_file).parent) + "\\" + new_name)
+            self.file.close()
+            self.lbl_path.destroy()
+            self.lbl_path = Label(self.win, text=str(Path(self.text.get()).name) + " - " + self.text.get(),
+                                  font=('Helvetica', 10, 'bold italic'))
+            self.lbl_path.place(x=5, y=15)
         if os.path.isfile(Path(self.current_file)):
             new_name = new_name + ".py"
         os.rename(self.current_file, str(Path(self.current_file).parent) + "\\" + new_name)
@@ -207,6 +219,7 @@ class Window:
             new_root = self.tree_view.insert(parent, index='end', text=file, tags=Path(f),
                                              image=render)
             if os.path.isdir(f):
+                self.dir_list.append(Path(f).name)
                 self.file_structure(new_root, f)
 
     def close_window(self):
@@ -284,16 +297,36 @@ class Window:
         self.set_root_node(file)
 
     def add_file(self, is_dir):
-        file_name = PopUp(self.win)
+        self.dir_list.append("")
+        file_name = pu.PopUp(self.win, list=self.dir_list)
         self.win.wait_window(file_name.top)
+        dir_name = file_name.variable.get()
         file_name = str(file_name.value)
+        temp_item = None
+
+
+        # TODO: iterate through whole treeview and find children (find match)
+        # - create the right file structure to add it to the files
+        if len(dir_name) != 0:
+            for item in self.tree_view.get_children():
+                s = self.tree_view.item(item)['text']
+                if self.tree_view.item(item)['text'] == dir_name:
+                    temp_item = item
+                    break
+
+
+
 
         if len(file_name) == 0:
             return
 
         if not is_dir:
             file_name = file_name + ".py"
-        self.tree_view.insert(self.root_node, index='end', text=file_name)
+
+        if temp_item is not None:
+            self.tree_view.insert(temp_item, index='end', text=file_name)
+        else:
+            self.tree_view.insert(self.root_node, index='end', text=file_name)
 
         try:
             file_name = self.text.get() + "\\" + file_name
