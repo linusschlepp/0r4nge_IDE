@@ -13,7 +13,6 @@ from PIL import Image, ImageTk as itk
 import popup_ as pu
 
 
-
 # TODO: Fix add-images/icons to project especially TreeView
 class Window:
     def __init__(self, win):
@@ -302,20 +301,18 @@ class Window:
         self.win.wait_window(file_name.top)
         dir_name = file_name.variable.get()
         file_name = str(file_name.value)
-        temp_item = None
+        self.temp_item = None
 
-
-        # TODO: iterate through whole treeview and find children (find match)
-        # - create the right file structure to add it to the files
+        #
+        # TODO: create the right file structure to add it to the files
         if len(dir_name) != 0:
-            for item in self.tree_view.get_children():
-                s = self.tree_view.item(item)['text']
-                if self.tree_view.item(item)['text'] == dir_name:
-                    temp_item = item
-                    break
-
-
-
+            test_len = len(self.tree_view.get_children())
+            # for item in self.tree_view.get_children():
+            #     s = self.tree_view.item(item)['text']
+            #     if self.tree_view.item(item)['text'] == dir_name:
+            #         temp_item = item
+            #         break
+            self.rec_approach(self.tree_view.get_children(), dir_name)
 
         if len(file_name) == 0:
             return
@@ -323,8 +320,8 @@ class Window:
         if not is_dir:
             file_name = file_name + ".py"
 
-        if temp_item is not None:
-            self.tree_view.insert(temp_item, index='end', text=file_name)
+        if self.temp_item is not None:
+            self.tree_view.insert(self.temp_item, index='end', text=file_name)
         else:
             self.tree_view.insert(self.root_node, index='end', text=file_name)
 
@@ -336,6 +333,14 @@ class Window:
                 open(file_name, 'w')
         except AttributeError as e:
             print(e)
+
+     # iterate through children of tree_view recursively
+    def rec_approach(self, children, dir_name):
+        for item in children:
+            if self.tree_view.item(item)['text'] == dir_name:
+                self.temp_item = item
+            elif len(self.tree_view.get_children(item)) != 0:
+                self.rec_approach(self.tree_view.get_children(item), dir_name)
 
 
 window = Tk()
