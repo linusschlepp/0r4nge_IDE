@@ -84,34 +84,34 @@ class Window:
         window.geometry('1700x800+10+10')
 
         self.text = StringVar()
-        dir = str(open('currentFile.txt').read())
+        self.root_dir = str(open('currentFile.txt').read())
 
         self.lbl_path = None
         self.lbl_file = None
         self.current_file = None
         self.dir_list = []
-        self.name_file = str(os.listdir(dir)[0]) if len(os.listdir(dir)) > 0 else ""
+        self.name_file = str(os.listdir(self.root_dir)[0]) if len(os.listdir(self.root_dir)) > 0 else ""
 
         try:
-            self.current_file = dir + "\\" + self.name_file
+            self.current_file = self.root_dir + "\\" + self.name_file
         except IndexError:
             pass
 
-        self.set_root_node(dir)
+        self.set_root_node(self.root_dir)
 
         window.mainloop()
 
-    def set_root_node(self, dir):
+    def set_root_node(self, root_dir):
 
         if open('currentFile.txt').read() is not None:
             try:
-                self.text.set(dir)
+                self.text.set(root_dir)
 
                 if os.path.isfile(Path(self.current_file)):
                     self.text_area.insert(1.0, open(str(Path(self.current_file))).read())
-                self.root_node = self.tree_view.insert('', text=str(Path(dir).name), index='end')
+                self.root_node = self.tree_view.insert('', text=str(Path(root_dir).name), index='end')
 
-                self.file_structure(self.root_node, dir)
+                self.file_structure(self.root_node, root_dir)
 
                 if self.lbl_path is not None and self.lbl_file is not None:
                     self.lbl_path.destroy()
@@ -302,6 +302,7 @@ class Window:
         dir_name = file_name.variable.get()
         file_name = str(file_name.value)
         self.temp_item = None
+        self.parents = []
 
         #
         # TODO: create the right file structure to add it to the files
@@ -313,6 +314,11 @@ class Window:
             #         temp_item = item
             #         break
             self.rec_approach(self.tree_view.get_children(), dir_name)
+
+            file_path = ""
+
+            for s in self.parents:
+                file_path += "\\" + s
 
         if len(file_name) == 0:
             return
@@ -326,7 +332,7 @@ class Window:
             self.tree_view.insert(self.root_node, index='end', text=file_name)
 
         try:
-            file_name = self.text.get() + "\\" + file_name
+            file_name = self.text.get() + file_path + "\\" + file_name
             if is_dir:
                 os.mkdir(file_name)
             else:
@@ -340,6 +346,8 @@ class Window:
             if self.tree_view.item(item)['text'] == dir_name:
                 self.temp_item = item
             elif len(self.tree_view.get_children(item)) != 0:
+                if self.tree_view.item(item)['text'] != str(Path(self.root_dir).name):
+                    self.parents.append(self.tree_view.item(item)['text'])
                 self.rec_approach(self.tree_view.get_children(item), dir_name)
 
 
