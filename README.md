@@ -8,6 +8,6 @@ The 0r4nge IDE is a very minimlistic and simple Python IDE, which has also been 
 * [Tkinter](https://docs.python.org/3/library/tkinter.html)
 
 ## Setup
-To use this project, clone it, by running this command in your terminal/cmd: `clone https://github.com/linusschlepp/0r4nge_IDE.git`. 
+To use this project, clone it, by running this command in your terminal/cmd: `git clone https://github.com/linusschlepp/0r4nge_IDE.git`. 
 Or you can also use it as a .exe-file: [How to create a .exe-File using PyInstaller](https://www.youtube.com/watch?v=QWqxRchawZY&t=274s&ab_channel=Codemy.com)
 
